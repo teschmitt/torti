@@ -10,7 +10,7 @@ SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 900
 
 # direction consts
-LEFT = 0
+LEFT = -1
 RIGHT = 1
 
 
@@ -38,6 +38,10 @@ class Torti(arcade.Sprite):
     def stop(self):
         self._velocity -= self._velocity * self._stop_strength
 
+    def turn(self, direction: int):
+        self.change_angle = direction * 1
+        print(f'Turning {direction}')
+
     def update(self):
         # Convert angle in degrees to radians.
         angle_rad = math.radians(self.angle)
@@ -46,8 +50,8 @@ class Torti(arcade.Sprite):
         self.angle += self.change_angle
 
         # Use math to find our change based on our speed and angle
-        self.center_x += -self.speed * math.sin(angle_rad)
-        self.center_y += self.speed * math.cos(angle_rad)
+        # self.center_x += -self.speed * math.sin(angle_rad)
+        # self.center_y += self.speed * math.cos(angle_rad)
 
 
 class GameWindow(arcade.Window):
@@ -86,9 +90,9 @@ class GameWindow(arcade.Window):
 
             # Rotate left/right
         elif key == arcade.key.LEFT:
-            self.player_sprite.change_angle = ANGLE_SPEED
+            self.torti_sprite.turn(LEFT)
         elif key == arcade.key.RIGHT:
-            self.player_sprite.change_angle = -ANGLE_SPEED
+            self.torti_sprite.turn(RIGHT)
 
         def on_key_release(self, key, modifiers):
             """Called when the user releases a key. """
@@ -100,11 +104,12 @@ class GameWindow(arcade.Window):
 
     def on_update(self, delta_time):
         """ Movement and game logic """
-        pass
+        self.sprite_list.update()
 
     def on_draw(self):
         """ Draw everything """
         self.sprite_list.draw()
+        arcade.draw_text(f'{self.torti_sprite.angle}', 10, 20, arcade.color.WHITE, 14)
 
 
 
