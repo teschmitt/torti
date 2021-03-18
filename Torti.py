@@ -42,7 +42,7 @@ class Torti(arcade.Sprite, KeyListener):
 
     """
 
-    def __init__(self, image, scale, pos, walls: arcade.SpriteList):
+    def __init__(self, image: str, scale: float, pos: tuple, top_sprite_list: arcade.SpriteList) -> None:
         """ Set up the player """
 
         # Call the parent init
@@ -56,8 +56,8 @@ class Torti(arcade.Sprite, KeyListener):
 
         self._start_position = pos
         self.position = pos
+        self.brush_trail = top_sprite_list
         self._speed = 0.0
-        self._walls = walls
 
         # set of currently pressed keys
         self.keys_pressed = set()
@@ -88,7 +88,7 @@ class Torti(arcade.Sprite, KeyListener):
         self.change_angle = START_TURN_SPEED
 
     def update(self):
-        # Handle keypresses and releases
+        # Handle key-presses and releases
         if self.keys_pressed:
             self.handle_key_inputs()
 
@@ -110,6 +110,11 @@ class Torti(arcade.Sprite, KeyListener):
                 self._moving[TURN] = False
 
         if self._speed > 0:
+            traildot = arcade.SpriteCircle(
+                radius=10, color=arcade.color.WHITE,
+            )
+            traildot.center_x, traildot.center_y = self.center_x, self.center_y
+            self.brush_trail.append(traildot)
             # Convert angle in degrees to radians.
             angle_rad = math.radians(self.angle)
             self._moving[LATERAL] = True
@@ -121,29 +126,13 @@ class Torti(arcade.Sprite, KeyListener):
                 self._speed = 0
                 self._moving[LATERAL] = False
 
-        if self.collides_with_list(self._walls):
-            self._speed = 0
-
     def handle_key_inputs(self) -> None:
+        if arcade.key.UP in self.keys_pressed:
+            self.impulse(FORWARD)
+        elif arcade.key.DOWN in self.keys_pressed:
+            self.impulse(BACKWARD)
 
-        if arcade.key.UP in self.keys_pressed \
-                and arcade.key.DOWN not in self.keys_pressed \
-                and self._speed < SPEED_FAST_THRESH:
-            self._direction = FORWARD
-            self._speed = START_SPEED
-        elif arcade.key.DOWN in self.keys_pressed \
-                and arcade.key.UP not in self.keys_pressed \
-                and self._speed < SPEED_FAST_THRESH:
-            self._direction = BACKWARD
-            self._speed = START_SPEED
-
-        if arcade.key.LEFT in self.keys_pressed \
-                and arcade.key.RIGHT not in self.keys_pressed \
-                and self.change_angle < TURN_FAST_THRESH:
-            self._turn_direction = LEFT
-            self.change_angle = START_TURN_SPEED
-        elif arcade.key.RIGHT in self.keys_pressed \
-                and arcade.key.LEFT not in self.keys_pressed \
-                and self.change_angle < TURN_FAST_THRESH:
-            self._turn_direction = RIGHT
-            self.change_angle = START_TURN_SPEED
+        if arcade.key.LEFT in self.keys_pressed:
+            self.turn(LEFT)
+        elif arcade.key.RIGHT in self.keys_pressed:
+            self.turn(RIGHT)

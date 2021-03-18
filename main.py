@@ -29,20 +29,22 @@ class GameWindow(arcade.Window):
         self.sprite_list = None
         self.wall_list = None
         self.key_listeners = None
-        self.hit_list = None
+        self.physics_engine = None
 
         arcade.set_background_color(arcade.color.OCEAN_BOAT_BLUE)
 
     def setup(self):
         """ Set up everything with the game """
         self.sprite_list = arcade.SpriteList()
-        self.wall_list = arcade.SpriteList(use_spatial_hash=True)
+        self.wall_list = arcade.SpriteList()
 
         # set up walls around the view to enable collision detection
-        for wall_pos in ((SCREEN_WIDTH / 2, -1, SCREEN_WIDTH, 2),
-                         (SCREEN_WIDTH / 2, SCREEN_HEIGHT + 1, SCREEN_WIDTH, 2),
-                         (-1, SCREEN_HEIGHT / 2, 1, SCREEN_HEIGHT),
-                         (SCREEN_WIDTH + 1, SCREEN_HEIGHT / 2, 1, SCREEN_HEIGHT)):
+        x = 5
+        w = 20
+        for wall_pos in ((SCREEN_WIDTH / 2, -x, SCREEN_WIDTH, w),
+                         (SCREEN_WIDTH / 2, SCREEN_HEIGHT + x, SCREEN_WIDTH, w),
+                         (-x, SCREEN_HEIGHT / 2, w, SCREEN_HEIGHT),
+                         (SCREEN_WIDTH + x, SCREEN_HEIGHT / 2, w, SCREEN_HEIGHT)):
             wall_sprite = arcade.SpriteSolidColor(width=wall_pos[2], height=wall_pos[3],
                                                   color=arcade.color.WHITE)
             wall_sprite.center_x = wall_pos[0]
@@ -53,9 +55,11 @@ class GameWindow(arcade.Window):
             'images/torti-sprite.png',
             1.5,
             (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2),
-            self.wall_list
+            self.sprite_list
         )
         self.sprite_list.append(self.torti_sprite)
+
+        self.physics_engine = arcade.PhysicsEngineSimple(self.torti_sprite, self.wall_list)
 
         self.key_listeners = []
         self.key_listeners.append(self.torti_sprite)
@@ -75,6 +79,7 @@ class GameWindow(arcade.Window):
     def on_update(self, delta_time):
         """ Movement and game logic """
         self.sprite_list.update()
+        self.physics_engine.update()
 
     def on_draw(self):
         """ Draw everything """
@@ -83,7 +88,7 @@ class GameWindow(arcade.Window):
         # self.sprite_list.draw_hit_boxes()
         self.wall_list.draw()
 
-        arcade.draw_text(f'{self.hit_list}', 10, 20, arcade.color.WHITE, 14)
+        # arcade.draw_text(f'{self.hit_list}', 10, 20, arcade.color.WHITE, 14)
 
 
 def main():
