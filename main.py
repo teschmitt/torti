@@ -2,17 +2,14 @@ import os
 
 import arcade
 
-from torti import Torti
+from KeyListener import KeyListener
+from Torti import Torti
 
 SCREEN_TITLE = "torti flying Tortoise v0.1.0"
 
 # Size of screen to show, in pixels
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 900
-
-# direction consts
-LEFT = 1
-RIGHT = -1
 
 
 class GameWindow(arcade.Window):
@@ -28,46 +25,52 @@ class GameWindow(arcade.Window):
         file_path = os.path.dirname(os.path.abspath(__file__))
         os.chdir(file_path)
 
-        self.b = None
         self.torti_sprite = None
         self.sprite_list = None
+        self.wall_list = None
+        self.key_listeners = None
+        self.hit_list = None
 
-        arcade.set_background_color(arcade.color.BLACK_OLIVE)
+        arcade.set_background_color(arcade.color.OCEAN_BOAT_BLUE)
 
     def setup(self):
         """ Set up everything with the game """
         self.sprite_list = arcade.SpriteList()
+        self.wall_list = arcade.SpriteList(use_spatial_hash=True)
+
+        # set up walls around the view to enable collision detection
+        for wall_pos in ((SCREEN_WIDTH / 2, -1, SCREEN_WIDTH, 2),
+                         (SCREEN_WIDTH / 2, SCREEN_HEIGHT + 1, SCREEN_WIDTH, 2),
+                         (-1, SCREEN_HEIGHT / 2, 1, SCREEN_HEIGHT),
+                         (SCREEN_WIDTH + 1, SCREEN_HEIGHT / 2, 1, SCREEN_HEIGHT)):
+            wall_sprite = arcade.SpriteSolidColor(width=wall_pos[2], height=wall_pos[3],
+                                                  color=arcade.color.WHITE)
+            wall_sprite.center_x = wall_pos[0]
+            wall_sprite.center_y = wall_pos[1]
+            self.wall_list.append(wall_sprite)
+
         self.torti_sprite = Torti(
             'images/torti-sprite.png',
-            1.0,
-            (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
+            1.5,
+            (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2),
+            self.wall_list
+        )
         self.sprite_list.append(self.torti_sprite)
+
+        self.key_listeners = []
+        self.key_listeners.append(self.torti_sprite)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
-        if key == arcade.key.UP:
-            self.torti_sprite.impulse()
-        elif key == arcade.key.DOWN:
-            self.torti_sprite.stop()
 
-            # Rotate left/right
-        elif key == arcade.key.LEFT:
-            self.torti_sprite.turn(LEFT)
-        elif key == arcade.key.RIGHT:
-            self.torti_sprite.turn(RIGHT)
-
-        elif key == arcade.key.ESCAPE:
-            self.torti_sprite.reset_position()
+        for listener in self.key_listeners:
+            listener.key_press(key, modifiers)
 
     def on_key_release(self, key: int, modifiers: int):
         """Called when the user releases a key. """
 
-        # if key == arcade.key.UP or key == arcade.key.DOWN:
-        #     self.torti_sprite.speed = 0
-        # elif key == arcade.key.LEFT or key == arcade.key.RIGHT:
-        #     self.torti_sprite.change_angle = 0
-
-        pass
+        for listener in self.key_listeners:
+            listener.key_release(key, modifiers)
 
     def on_update(self, delta_time):
         """ Movement and game logic """
@@ -77,7 +80,10 @@ class GameWindow(arcade.Window):
         """ Draw everything """
         arcade.start_render()
         self.sprite_list.draw()
-        arcade.draw_text(f'{self.torti_sprite.angle}', 10, 20, arcade.color.WHITE, 14)
+        # self.sprite_list.draw_hit_boxes()
+        self.wall_list.draw()
+
+        arcade.draw_text(f'{self.hit_list}', 10, 20, arcade.color.WHITE, 14)
 
 
 def main():
