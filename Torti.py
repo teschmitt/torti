@@ -13,13 +13,13 @@ BACKWARD = -1
 LATERAL = 0
 TURN = 1
 
-START_TURN_SPEED = 7.0
+START_TURN_SPEED = 1.0
 TURN_DECAY = 0.1
 TURN_FAST_THRESH = 1.5
 TURN_STOP_THRESH = 0.1
 
-START_SPEED = 10.0
-SPEED_DECAY = 0.09
+START_SPEED = 5.0
+SPEED_DECAY = 0.1
 SPEED_FAST_THRESH = 2.0  # lower bound to re-energize when button stays pressed
 SPEED_STOP_THRESH = 0.1  # lower bound to stop after button is released
 

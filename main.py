@@ -27,6 +27,7 @@ class GameWindow(arcade.Window):
 
         self.torti_sprite = None
         self.sprite_list = None
+        self.brushstroke_list = None
         self.wall_list = None
         self.key_listeners = None
         self.physics_engine = None
@@ -36,6 +37,7 @@ class GameWindow(arcade.Window):
     def setup(self):
         """ Set up everything with the game """
         self.sprite_list = arcade.SpriteList()
+        self.brushstroke_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
 
         # set up walls around the view to enable collision detection
@@ -55,7 +57,7 @@ class GameWindow(arcade.Window):
             'images/torti-sprite.png',
             1.5,
             (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2),
-            self.sprite_list
+            self.brushstroke_list
         )
         self.sprite_list.append(self.torti_sprite)
 
@@ -84,6 +86,7 @@ class GameWindow(arcade.Window):
     def on_draw(self):
         """ Draw everything """
         arcade.start_render()
+        self.brushstroke_list.draw()
         self.sprite_list.draw()
         # self.sprite_list.draw_hit_boxes()
         self.wall_list.draw()
