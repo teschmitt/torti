@@ -2,7 +2,6 @@ import os
 
 import arcade
 
-from KeyListener import KeyListener
 from Torti import Torti
 
 SCREEN_TITLE = "torti flying Tortoise v0.1.0"
@@ -26,11 +25,13 @@ class GameWindow(arcade.Window):
         os.chdir(file_path)
 
         self.torti_sprite = None
+        # self.bubble_emitters = None
         self.sprite_list = None
         self.brushstroke_list = None
         self.wall_list = None
         self.key_listeners = None
         self.physics_engine = None
+        self.bubbles_reap_time = None
 
         arcade.set_background_color(arcade.color.OCEAN_BOAT_BLUE)
 
@@ -57,7 +58,8 @@ class GameWindow(arcade.Window):
             'images/torti-sprite.png',
             1.5,
             (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2),
-            self.brushstroke_list
+            self.brushstroke_list,
+            # self.bubble_emitters
         )
         self.sprite_list.append(self.torti_sprite)
 
@@ -81,16 +83,19 @@ class GameWindow(arcade.Window):
     def on_update(self, delta_time):
         """ Movement and game logic """
         self.physics_engine.update()
-        self.sprite_list.update()
-        self.wall_list.update()
+        self.torti_sprite.bubbles.update()
+        self.torti_sprite.update()
 
+        self.wall_list.update()
 
     def on_draw(self):
         """ Draw everything """
         arcade.start_render()
         self.brushstroke_list.draw()
-        self.sprite_list.draw()
-        # self.sprite_list.draw_hit_boxes()
+        self.torti_sprite.draw()
+        self.torti_sprite.bubbles.draw()
+        # for e in self.bubble_emitters:
+        #     e.draw()
         self.wall_list.draw()
 
         # arcade.draw_text(f'{self.hit_list}', 10, 20, arcade.color.WHITE, 14)

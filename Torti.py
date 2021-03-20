@@ -1,8 +1,6 @@
+import arcade
 import math
 
-import arcade
-
-# direction consts
 from KeyListener import KeyListener
 
 CCLOCKW = 1
@@ -26,6 +24,19 @@ SPEED_STOP_THRESH = 0.1  # lower bound to stop after button is released
 REDIRECTION_SPEED = 0.5
 STOP_STRENGTH = 0.5
 
+# Bubble emitter constants
+DEFAULT_SCALE = 0.15
+DEFAULT_ALPHA = 64
+DEFAULT_PARTICLE_LIFETIME = 3.0
+PARTICLE_SPEED_FAST = 1.0
+PARTICLE_SPEED_SLOW = 0.3
+DEFAULT_EMIT_INTERVAL = 0.2
+DEFAULT_EMIT_DURATION = 0.5
+TEXTURE = ":resources:images/pinball/pool_cue_ball.png"
+
+BUBBLE_OFFSET_X = 10
+BUBBLE_OFFSET_Y = 10
+
 
 class Torti(arcade.Sprite, KeyListener):
     """
@@ -42,7 +53,7 @@ class Torti(arcade.Sprite, KeyListener):
 
     """
 
-    def __init__(self, image: str, scale: float, pos: tuple, top_sprite_list: arcade.SpriteList) -> None:
+    def __init__(self, image: str, scale: float, pos: tuple, top_sprite_list) -> None:
         """ Set up the player """
 
         # Call the parent init
@@ -59,8 +70,26 @@ class Torti(arcade.Sprite, KeyListener):
         self.brush_trail = top_sprite_list
         self._speed = 0.0
 
+        # field for the current angle in radians
+        self.angle_rad = math.radians(self.angle)
+
+        # self.bubble_emitters = bubble_emitters
+        self.bubbles = arcade.Emitter(
+            center_xy=(self.center_x, self.center_y),
+            emit_controller=arcade.EmitInterval(DEFAULT_EMIT_INTERVAL),
+            particle_factory=lambda emitter: arcade.LifetimeParticle(
+                filename_or_texture=TEXTURE,
+                change_xy=arcade.rand_in_circle((0.0, 0.0), PARTICLE_SPEED_FAST),
+                lifetime=1.0,
+                scale=DEFAULT_SCALE,
+                alpha=DEFAULT_ALPHA
+            )
+        )
+
         # set of currently pressed keys
         self.keys_pressed = set()
+
+        print(TEXTURE)
 
     def key_press(self, key, modifier):
         self.keys_pressed.add(key)
@@ -72,6 +101,7 @@ class Torti(arcade.Sprite, KeyListener):
             print(f'Key {key} with modifier {modifier} not found in keys_pressed set: {e}')
 
     def impulse(self, direction):
+        self._moving[LATERAL] = True
         self._direction = direction
         self._speed = START_SPEED
 
@@ -84,8 +114,13 @@ class Torti(arcade.Sprite, KeyListener):
         self._speed -= self._speed * STOP_STRENGTH
 
     def turn(self, direction: int):
+        self._moving[TURN] = True
         self._turn_direction = direction
         self.change_angle = self._turn_direction * START_TURN_SPEED
+
+    # def draw(self):
+    #     super().draw()
+    #     self.bubbles.draw()
 
     def update(self):
         # Handle key-presses and releases
@@ -95,31 +130,39 @@ class Torti(arcade.Sprite, KeyListener):
         if arcade.key.ESCAPE in self.keys_pressed:
             self.reset_position()
 
-        # Handle movement
+        # Handle Rotation
         if self.change_angle != 0:
-            self._moving[TURN] = True
-
             self.change_angle -= self.change_angle * TURN_DECAY
+
             if (self._turn_direction * TURN_STOP_THRESH) - (self._turn_direction * self.change_angle) > 0:
                 self.change_angle = 0
                 self._moving[TURN] = False
 
+        # Handle movement
         if self._speed > 0:
+            # draw the brush trail behind Torti
             traildot = arcade.SpriteCircle(
-                radius=10, color=arcade.color.WHITE,
+                radius=10, color=arcade.color.WHITE, soft=True
             )
             traildot.center_x, traildot.center_y = self.center_x, self.center_y
             self.brush_trail.append(traildot)
-            # Convert angle in degrees to radians.
-            angle_rad = math.radians(self.angle)
-            self._moving[LATERAL] = True
 
-            self.change_x = -self._direction * self._speed * math.sin(angle_rad)
-            self.change_y = self._direction * self._speed * math.cos(angle_rad)
+            self.change_x = -self._direction * self._speed * math.sin(self.angle_rad)
+            self.change_y = self._direction * self._speed * math.cos(self.angle_rad)
             self._speed -= self._speed * SPEED_DECAY
+
             if self._speed < SPEED_STOP_THRESH:
-                self._speed = 0
+                self._speed, self.change_x, self.change_y = 0.0, 0.0, 0.0
                 self._moving[LATERAL] = False
+
+        # Convert angle in degrees to radians.
+        self.angle_rad = math.radians(self.angle)
+        self.update_bubbles()
+
+    def update_bubbles(self):
+        # update bubbles to track head
+        self.bubbles.center_x = self.center_x - math.sin(self.angle_rad) * (BUBBLE_OFFSET_X + self.width / 2)
+        self.bubbles.center_y = self.center_y + math.cos(self.angle_rad) * (BUBBLE_OFFSET_Y + self.height / 2)
 
     def handle_key_inputs(self) -> None:
         if arcade.key.UP in self.keys_pressed:
