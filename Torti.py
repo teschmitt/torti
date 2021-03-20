@@ -5,15 +5,15 @@ import arcade
 # direction consts
 from KeyListener import KeyListener
 
-LEFT = 1
-RIGHT = -1
+CCLOCKW = 1
+CLOCKW = -1
 FORWARD = 1
 BACKWARD = -1
 
 LATERAL = 0
 TURN = 1
 
-START_TURN_SPEED = 1.0
+START_TURN_SPEED = 2.0
 TURN_DECAY = 0.1
 TURN_FAST_THRESH = 1.5
 TURN_STOP_THRESH = 0.1
@@ -85,7 +85,7 @@ class Torti(arcade.Sprite, KeyListener):
 
     def turn(self, direction: int):
         self._turn_direction = direction
-        self.change_angle = START_TURN_SPEED
+        self.change_angle = self._turn_direction * START_TURN_SPEED
 
     def update(self):
         # Handle key-presses and releases
@@ -96,16 +96,11 @@ class Torti(arcade.Sprite, KeyListener):
             self.reset_position()
 
         # Handle movement
-        if self.change_angle > 0:
+        if self.change_angle != 0:
             self._moving[TURN] = True
-            self.angle += self._turn_direction * self.change_angle
-
-            # keep angle between 0 and 360
-            if self.angle >= 360 or self.angle < 0:
-                self.angle -= self._turn_direction * 360
 
             self.change_angle -= self.change_angle * TURN_DECAY
-            if self.change_angle < TURN_STOP_THRESH:
+            if (self._turn_direction * TURN_STOP_THRESH) - (self._turn_direction * self.change_angle) > 0:
                 self.change_angle = 0
                 self._moving[TURN] = False
 
@@ -119,8 +114,8 @@ class Torti(arcade.Sprite, KeyListener):
             angle_rad = math.radians(self.angle)
             self._moving[LATERAL] = True
 
-            self.center_x += -self._direction * self._speed * math.sin(angle_rad)
-            self.center_y += self._direction * self._speed * math.cos(angle_rad)
+            self.change_x = -self._direction * self._speed * math.sin(angle_rad)
+            self.change_y = self._direction * self._speed * math.cos(angle_rad)
             self._speed -= self._speed * SPEED_DECAY
             if self._speed < SPEED_STOP_THRESH:
                 self._speed = 0
@@ -133,6 +128,6 @@ class Torti(arcade.Sprite, KeyListener):
             self.impulse(BACKWARD)
 
         if arcade.key.LEFT in self.keys_pressed:
-            self.turn(LEFT)
+            self.turn(CCLOCKW)
         elif arcade.key.RIGHT in self.keys_pressed:
-            self.turn(RIGHT)
+            self.turn(CLOCKW)

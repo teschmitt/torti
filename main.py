@@ -41,12 +41,12 @@ class GameWindow(arcade.Window):
         self.wall_list = arcade.SpriteList()
 
         # set up walls around the view to enable collision detection
-        x = 5
+        d = 5
         w = 20
-        for wall_pos in ((SCREEN_WIDTH / 2, -x, SCREEN_WIDTH, w),
-                         (SCREEN_WIDTH / 2, SCREEN_HEIGHT + x, SCREEN_WIDTH, w),
-                         (-x, SCREEN_HEIGHT / 2, w, SCREEN_HEIGHT),
-                         (SCREEN_WIDTH + x, SCREEN_HEIGHT / 2, w, SCREEN_HEIGHT)):
+        for wall_pos in ((SCREEN_WIDTH / 2, -d, SCREEN_WIDTH, w),
+                         (SCREEN_WIDTH / 2, SCREEN_HEIGHT + d, SCREEN_WIDTH, w),
+                         (-d, SCREEN_HEIGHT / 2, w, SCREEN_HEIGHT),
+                         (SCREEN_WIDTH + d, SCREEN_HEIGHT / 2, w, SCREEN_HEIGHT)):
             wall_sprite = arcade.SpriteSolidColor(width=wall_pos[2], height=wall_pos[3],
                                                   color=arcade.color.WHITE)
             wall_sprite.center_x = wall_pos[0]
@@ -80,8 +80,10 @@ class GameWindow(arcade.Window):
 
     def on_update(self, delta_time):
         """ Movement and game logic """
-        self.sprite_list.update()
         self.physics_engine.update()
+        self.sprite_list.update()
+        self.wall_list.update()
+
 
     def on_draw(self):
         """ Draw everything """
