@@ -68,6 +68,7 @@ class Torti(arcade.Sprite, KeyListener):
         self._start_position = pos
         self.position = pos
         self.brush_trail = top_sprite_list
+        self.brush_active = True
         self._speed = 0.0
 
         # field for the current angle in radians
@@ -105,10 +106,12 @@ class Torti(arcade.Sprite, KeyListener):
         self._direction = direction
         self._speed = START_SPEED
 
-    def reset_position(self):
+    def reset_torti(self):
         self.center_x, self.center_y = self._start_position
-        self._speed = 0
-        self.change_angle = 0
+        self.reset_movement()
+        remove_list = [s for s in self.brush_trail]
+        for s in remove_list:
+            self.brush_trail.remove(s)
 
     def stop(self):
         self._speed -= self._speed * STOP_STRENGTH
@@ -127,9 +130,6 @@ class Torti(arcade.Sprite, KeyListener):
         if self.keys_pressed:
             self.handle_key_inputs()
 
-        if arcade.key.ESCAPE in self.keys_pressed:
-            self.reset_position()
-
         # Handle Rotation
         if self.change_angle != 0:
             self.change_angle -= self.change_angle * TURN_DECAY
@@ -145,14 +145,15 @@ class Torti(arcade.Sprite, KeyListener):
                 radius=10, color=arcade.color.WHITE, soft=True
             )
             traildot.center_x, traildot.center_y = self.center_x, self.center_y
-            self.brush_trail.append(traildot)
+            if self.brush_active:
+                self.brush_trail.append(traildot)
 
             self.change_x = -self._direction * self._speed * math.sin(self.angle_rad)
             self.change_y = self._direction * self._speed * math.cos(self.angle_rad)
             self._speed -= self._speed * SPEED_DECAY
 
             if self._speed < SPEED_STOP_THRESH:
-                self._speed, self.change_x, self.change_y = 0.0, 0.0, 0.0
+                self.reset_movement()
                 self._moving[LATERAL] = False
 
         # Convert angle in degrees to radians.
@@ -174,3 +175,16 @@ class Torti(arcade.Sprite, KeyListener):
             self.turn(CCLOCKW)
         elif arcade.key.RIGHT in self.keys_pressed:
             self.turn(CLOCKW)
+
+        if arcade.key.SPACE in self.keys_pressed:
+            self.brush_active = True
+        else:
+            self.brush_active = False
+
+        if arcade.key.ESCAPE in self.keys_pressed:
+            self.reset_torti()
+
+    def reset_movement(self):
+        self._speed, self.change_x, self.change_y = 0.0, 0.0, 0.0
+        self._speed = 0
+        self.change_angle = 0
