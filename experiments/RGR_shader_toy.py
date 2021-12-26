@@ -16,7 +16,7 @@ class TestArcade(arcade.Window):
         arcade.set_background_color(arcade.color.BLACK)
 
         # open file and store source
-        fp = open("../resources/shaders/water.glsl", "r")
+        fp = open("water.glsl", "r")
         source = "".join(fp.readlines())
         fp.close()
 
